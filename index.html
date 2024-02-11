@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App with Cyberbullying Detector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif,system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 0;
+      background:linear-gradient(rgb(84, 104, 255),rgb(255, 255, 255));
+      height: 100vh;
+      
+    }
+
+    .chat-container {
+      max-width: 400px;
+      margin: 20px auto;
+      background-color: #3c00a411;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(255, 1, 1, 0.263);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background-color: #000000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffffff;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .chat-messages {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .chat-input {
+      display: flex;
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background-color: #6c6c6c;
+    }
+
+    .chat-input input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 20px;
+      margin-right: 10px;
+    }
+
+    .chat-input button {
+      padding: 8px 20px;
+      background-color: #09ff00;
+      color: #000000;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .message .sender {
+      font-weight: bold;
+    }
+
+    .report-button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: #f70000;
+      color: #ffffff;
+      border: none;
+      border-radius: 50%;
+      padding: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat-container" id="chatContainer" style="display:none;">
+    <div class="chat-header">
+      <h2>Safe-Chat App</h2>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages will be displayed here -->
+    </div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type your message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    function startChat() {
+      var user = localStorage.getItem("username");
+
+      if (!user) {
+        // Ask for the username if not set
+        user = prompt("Please enter your name:");
+        if (!user) return; // If user cancels, do nothing
+        localStorage.setItem("username", user);
+      }
+
+      document.getElementById("chatContainer").style.display = "block";
+      loadMessages();
+    }
+
+    function sendMessage() {
+      var messageInput = document.getElementById("messageInput");
+      var message = messageInput.value.trim();
+      var user = localStorage.getItem("username");
+
+      if (message !== "") {
+        // Check for cyberbullying
+        if (checkForBullying(message)) {
+          message = "Warning: This message contains potentially offensive content! Message is :  \n"+message;
+          messageInput.value = "";
+        }
+
+        var messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+        messageElement.innerHTML = `<span class="sender">${user}:</span> ${message}`;
+
+        // Add report button
+        var reportButton = document.createElement("button");
+        reportButton.classList.add("report-button");
+        reportButton.innerText = "Report";
+        reportButton.onclick = function () {
+          // Redirect to report page
+          window.location.href = "report.html";
+        };
+        messageElement.appendChild(reportButton);
+
+        document.getElementById("chatMessages").appendChild(messageElement);
+
+        // Store message in local storage for other users to see
+        var messages = JSON.parse(localStorage.getItem("messages")) || [];
+        messages.push({user: user, message: message});
+        localStorage.setItem("messages", JSON.stringify(messages));
+
+        // Clear input
+        if (!message.includes("Warning:")) {
+          messageInput.value = "";
+          messageInput.focus();
+        }
+      }
+    }
+
+    // Function to load messages from local storage on page load
+    function loadMessages() {
+      var messages = JSON.parse(localStorage.getItem("messages")) || [];
+      var chatMessages = document.getElementById("chatMessages");
+
+      chatMessages.innerHTML = ""; // Clear previous messages
+
+      messages.forEach(function (msg) {
+        var messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+        messageElement.innerHTML = `<span class="sender">${msg.user}:</span> ${msg.message}`;
+
+        // Add report button
+        var reportButton = document.createElement("button");
+        reportButton.classList.add("report-button");
+        reportButton.innerText = "Report";
+        reportButton.onclick = function () {
+          // Redirect to report page
+          window.location.href = "report.html";
+        };
+        messageElement.appendChild(reportButton);
+
+        chatMessages.appendChild(messageElement);
+      });
+    }
+
+    // Check for cyberbullying
+    function checkForBullying(message) {
+      // List of offensive words or phrases
+      var offensiveWords = ["hate", "idiot", "stupid", "loser", "ugly", "kill yourself","will gonna kill you", "you will not any more", "send me money", "i will open your secret", "you have been hacked", "I am your life controler", "Be ready","I will hurt you."
+,"You better watch your back.",
+"I'm going to find you.",
+"You're in a lot of trouble.",
+"This isn't funny anymore.",
+"Why are you doing this?",
+"What do you want from me?",
+"Leave me alone!",
+"You should kill yourself."];
+
+      // Check if the message contains any offensive words
+      for (var i = 0; i < offensiveWords.length; i++) {
+        if (message.toLowerCase().includes(offensiveWords[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Start the chat when the page loads
+    startChat();
+  </script>
+</body>
+
+</html>
